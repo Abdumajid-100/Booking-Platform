@@ -87,7 +87,10 @@
                                 <a href="#" class="tp-link">Email Verification</a>
                             </li>
                             <li>
-                                <a href="#" class="tp-link">Logout</a>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="tp-link border-0 bg-transparent w-100 text-start">Logout</button>
+                                </form>
                             </li>
                         </ul>
                     </div>
