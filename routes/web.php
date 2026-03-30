@@ -1,10 +1,17 @@
 <?php
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\BusinessesController;
+use App\Http\Controllers\admin\BusinessesTypesController;
 
 Route::get('/', function () {
     return view('welcome');
 });
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('businesses', BusinessesController::class);
+    Route::resource('businesses-types', BusinessesTypesController::class);
+
+})->middleware(['auth', 'role:admin']);
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
