@@ -1,5 +1,4 @@
-
-<!-- Vendor -->
+﻿<!-- Vendor -->
 <script src="{{asset('assets/admin/libs/jquery/jquery.min.js')}}"></script>
 <script src="{{asset('assets/admin/libs/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
 <script src="{{asset('assets/admin/libs/simplebar/simplebar.min.js')}}"></script>
@@ -17,27 +16,40 @@
 <!-- App js-->
 <script src="{{asset('assets/admin/js/app.js')}}"></script>
 <script>
-    document.querySelectorAll('.schedule-row').forEach(row => {
-
+    document.querySelectorAll('.schedule-row').forEach((row) => {
         const checkbox = row.querySelector('.day-off');
         const start = row.querySelector('.start-time');
         const end = row.querySelector('.end-time');
 
+        if (!checkbox || !start || !end) {
+            return;
+        }
+
         function toggle() {
             if (checkbox.checked) {
-                start.disabled = true;
-                end.disabled = true;
-                start.value = '';
-                end.value = '';
-                row.style.opacity = "0.5";
+                start.disabled = false;
+                end.disabled = false;
+                row.style.opacity = '0.5';
             } else {
                 start.disabled = false;
                 end.disabled = false;
-                row.style.opacity = "1";
+                row.style.opacity = '1';
+            }
+        }
+
+        function switchToWorkDayIfTimeEntered() {
+            if (start.value || end.value) {
+                checkbox.checked = false;
+                start.disabled = false;
+                end.disabled = false;
+                row.style.opacity = '1';
             }
         }
 
         checkbox.addEventListener('change', toggle);
-        toggle(); // при загрузке
+        start.addEventListener('input', switchToWorkDayIfTimeEntered);
+        end.addEventListener('input', switchToWorkDayIfTimeEntered);
+
+        toggle();
     });
 </script>

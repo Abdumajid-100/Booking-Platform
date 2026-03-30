@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('business_id')->constrained('businesses');
+            $table->string('name');
+            $table->decimal('price');
+            $table->string('duration');
             $table->timestamps();
         });
     }
