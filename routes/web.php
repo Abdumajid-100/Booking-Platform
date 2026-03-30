@@ -45,4 +45,4 @@ Route::middleware('auth')->group(function () {
         return 'Manage bookings page';
     })->name('bookings.manage');
 });
-require __DIR__.'/auth.php';
+ require __DIR__.'/auth.php';
