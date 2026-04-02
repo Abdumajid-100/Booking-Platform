@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\BusinessesController;
 use App\Http\Controllers\admin\BusinessesTypesController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('public.layouts.app');
 });
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('businesses', BusinessesController::class);
