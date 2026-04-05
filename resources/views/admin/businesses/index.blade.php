@@ -106,6 +106,7 @@
                                     <div class="mb-1"><strong>Время работы:</strong> {{ $workTimeLabel ?? 'Не указано' }}</div>
                                     <div class="mb-1"><strong>Выходные:</strong> {{ $dayOffCount }} {{ $dayOffLabel }}</div>
                                     <div class="mb-1"><strong>Дни работы:</strong> {{ $workingDayNames !== '' ? $workingDayNames : 'Не указан' }}</div>
+                                    <div class="mb-1"><strong>Услуги:</strong> {{ $business->services->isNotEmpty() ? $business->services->pluck('name')->implode(', ') : 'Не добавлены' }}</div>
                                     @if($workingDays->isNotEmpty())
                                         <div class="d-flex flex-wrap gap-1 mt-1">
                                             @foreach($workingDays as $item)

@@ -1,40 +1,38 @@
 <?php
 
-namespace App\Http\Controllers\admin;
+namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Businesses;
 use App\Models\BusinessesTypes;
 use App\Models\Schedules;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 
 class BusinessesController extends Controller
 {
-    public function index()
+    public function index(Request $request): View
     {
-        $businesses = Businesses::with('type', 'owner', 'schedules', 'services')->get();
-        return view('admin.businesses.index', compact('businesses'));
+        $businesses = Businesses::with(['type', 'schedules', 'services'])
+            ->where('user_id', $request->user()->id)
+            ->latest()
+            ->get();
+
+        return view('owner.businesses.index', compact('businesses'));
     }
 
-    public function create(Request $request)
+    public function create(): View
     {
-        if (!$request->user()) {
-            return redirect()->route('login');
-        }
-
         $types = BusinessesTypes::query()->orderBy('name')->get();
-        return view('admin.businesses.create', compact('types'));
+
+        return view('owner.businesses.create', compact('types'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $userId = $request->user()?->id;
-        if (!$userId) {
-            return redirect()->route('login');
-        }
-
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -55,8 +53,7 @@ class BusinessesController extends Controller
         });
 
         $data = $validator->validate();
-
-        $data['user_id'] = $userId;
+        $data['user_id'] = $request->user()->id;
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('business_images', 'public');
@@ -64,28 +61,40 @@ class BusinessesController extends Controller
 
         $business = Businesses::create($data);
 
-        if ($request->has('schedule')) {
-            foreach ($request->schedule as $day => $scheduleData) {
-                $this->storeScheduleRow($business->id, $day, $scheduleData);
-            }
+        if ($request->user() && !$request->user()->hasRole('owner')) {
+            $request->user()->assignRole('owner');
+        }
+
+        foreach ($request->input('schedule', []) as $day => $scheduleData) {
+            $this->storeScheduleRow($business->id, $day, $scheduleData);
         }
 
         $this->syncServices($business, $request->input('services', []));
 
-        return redirect()->route('admin.businesses.index')
-            ->with('success', 'Бизнес добавлен!');
+        return redirect()->route('owner.businesses.index')->with('success', 'Бизнес успешно добавлен.');
     }
 
-    public function edit(Businesses $business)
+    public function show(Request $request, Businesses $business): View
     {
+        $business = $this->ownedBusiness($request, $business);
+        $business->load(['type', 'schedules', 'services']);
+
+        return view('owner.businesses.show', compact('business'));
+    }
+
+    public function edit(Request $request, Businesses $business): View
+    {
+        $business = $this->ownedBusiness($request, $business);
+        $business->load(['schedules', 'services']);
         $types = BusinessesTypes::query()->orderBy('name')->get();
-        $business->load('schedules', 'services');
 
-        return view('admin.businesses.edit', compact('business', 'types'));
+        return view('owner.businesses.edit', compact('business', 'types'));
     }
 
-    public function update(Request $request, Businesses $business)
+    public function update(Request $request, Businesses $business): RedirectResponse
     {
+        $business = $this->ownedBusiness($request, $business);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -118,20 +127,19 @@ class BusinessesController extends Controller
 
         $business->update($data);
 
-        if ($request->has('schedule')) {
-            foreach ($request->schedule as $day => $scheduleData) {
-                $this->upsertScheduleRow($business, $day, $scheduleData);
-            }
+        foreach ($request->input('schedule', []) as $day => $scheduleData) {
+            $this->upsertScheduleRow($business, $day, $scheduleData);
         }
 
         $this->syncServices($business, $request->input('services', []));
 
-        return redirect()->route('admin.businesses.index')
-            ->with('success', 'Бизнес обновлен!');
+        return redirect()->route('owner.businesses.index')->with('success', 'Бизнес успешно обновлен.');
     }
 
-    public function destroy(Businesses $business)
+    public function destroy(Request $request, Businesses $business): RedirectResponse
     {
+        $business = $this->ownedBusiness($request, $business);
+
         if ($business->image) {
             Storage::disk('public')->delete($business->image);
         }
@@ -140,15 +148,14 @@ class BusinessesController extends Controller
         $business->services()->delete();
         $business->delete();
 
-        return redirect()->route('admin.businesses.index')
-            ->with('success', 'Бизнес удален!');
+        return redirect()->route('owner.businesses.index')->with('success', 'Бизнес успешно удален.');
     }
 
-    public function show(Businesses $business)
+    private function ownedBusiness(Request $request, Businesses $business): Businesses
     {
-        $business->load('type', 'owner', 'schedules', 'services');
+        abort_unless($business->user_id === $request->user()->id, 403);
 
-        return view('admin.businesses.show', compact('business'));
+        return $business;
     }
 
     private function storeScheduleRow(int $businessId, string $day, array $scheduleData): void
@@ -156,7 +163,6 @@ class BusinessesController extends Controller
         $startTime = $this->normalizeTime($scheduleData['start'] ?? null);
         $endTime = $this->normalizeTime($scheduleData['end'] ?? null);
         $hasTimeRange = (bool) ($startTime && $endTime);
-        // If hours are not provided, save day as day off by default.
         $isDayOff = !$hasTimeRange;
 
         Schedules::create([
@@ -171,11 +177,9 @@ class BusinessesController extends Controller
     private function upsertScheduleRow(Businesses $business, string $day, array $scheduleData): void
     {
         $schedule = $business->schedules()->firstOrNew(['day_of_week' => $day]);
-
         $startTime = $this->normalizeTime($scheduleData['start'] ?? null);
         $endTime = $this->normalizeTime($scheduleData['end'] ?? null);
         $hasTimeRange = (bool) ($startTime && $endTime);
-        // If hours are not provided, keep day as day off by default.
         $isDayOff = !$hasTimeRange;
 
         $schedule->business_id = $business->id;
@@ -192,12 +196,7 @@ class BusinessesController extends Controller
         }
 
         $value = trim($value);
-        if ($value === '') {
-            return null;
-        }
-
-        // Accept only valid HH:MM or HH:MM:SS and store as HH:MM.
-        if (!preg_match('/^\\d{2}:\\d{2}(:\\d{2})?$/', $value)) {
+        if ($value === '' || !preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $value)) {
             return null;
         }
 

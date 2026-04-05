@@ -117,6 +117,25 @@
                             @endif
                         </div>
 
+                        <div class="mb-4">
+                            <div class="fw-semibold mb-2">Услуги</div>
+                            @if($business->services->isEmpty())
+                                <div class="small text-muted">Услуги пока не добавлены.</div>
+                            @else
+                                <div class="row g-2">
+                                    @foreach($business->services as $service)
+                                        <div class="col-sm-6">
+                                            <div class="p-3 bg-light rounded-3 h-100">
+                                                <div class="fw-semibold">{{ $service->name }}</div>
+                                                <div class="small text-muted mt-1">Цена: {{ number_format((float) $service->price, 0, '.', ' ') }} сум</div>
+                                                <div class="small text-muted">Длительность: {{ $service->duration }}</div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
                         <div class="mt-auto d-flex flex-wrap gap-2">
                             <a href="{{ route('admin.businesses.index') }}" class="btn btn-dark">Назад</a>
                             <a href="{{ route('admin.businesses.edit', $business) }}" class="btn btn-outline-warning">Изменить</a>
