@@ -32,4 +32,9 @@ class Businesses extends Model
     {
         return $this->hasMany(Schedules::class, 'business_id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'business_id');
+    }
 }

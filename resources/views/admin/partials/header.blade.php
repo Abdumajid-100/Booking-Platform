@@ -4,7 +4,26 @@
 <head>
 
     <meta charset="utf-8" />
-    <title>@yield('title')</title>
+    @php
+        $adminTitle = match (true) {
+            request()->routeIs('dashboard') => 'Личный кабинет',
+            request()->routeIs('admin.layouts.app') => 'Админ панель',
+            request()->routeIs('admin.search') => 'Поиск',
+            request()->routeIs('admin.businesses.index') => 'Бизнесы',
+            request()->routeIs('admin.businesses.create') => 'Добавить бизнес',
+            request()->routeIs('admin.businesses.edit') => 'Редактировать бизнес',
+            request()->routeIs('admin.businesses.show') => 'Карточка бизнеса',
+            request()->routeIs('admin.businesses-types.index') => 'Типы бизнесов',
+            request()->routeIs('admin.businesses-types.create') => 'Добавить тип бизнеса',
+            request()->routeIs('admin.businesses-types.edit') => 'Редактировать тип бизнеса',
+            request()->routeIs('admin.businesses-types.show') => 'Карточка типа бизнеса',
+            request()->routeIs('profile.edit') => 'Настройки аккаунта',
+            request()->routeIs('bookings.manage') => 'Управление бронированиями',
+            default => 'BroNix Admin',
+        };
+        $pageTitle = trim($__env->yieldContent('title', $adminTitle));
+    @endphp
+    <title>{{ $pageTitle }} | BroNix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A fully featured admin theme which can be used to build CRM, CMS, etc."/>
     <meta name="author" content="Zoyothemes"/>

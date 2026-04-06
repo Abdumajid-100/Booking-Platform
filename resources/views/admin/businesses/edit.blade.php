@@ -100,6 +100,78 @@
                     </div>
 
                     @php
+                        $serviceRows = old('services', $business->services->map(function ($service) {
+                            return [
+                                'id' => $service->id,
+                                'name' => $service->name,
+                                'price' => $service->price,
+                                'duration' => $service->duration,
+                            ];
+                        })->toArray());
+
+                        if (count($serviceRows) < 3) {
+                            $serviceRows = array_pad($serviceRows, 3, ['id' => null, 'name' => '', 'price' => '', 'duration' => '']);
+                        }
+                    @endphp
+
+                    <div class="border rounded-4 p-3 p-md-4 mb-4 bg-light-subtle">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">Услуги бизнеса</h5>
+                            <small class="text-muted">Обновите название, цену и длительность услуг</small>
+                        </div>
+
+                        @foreach($serviceRows as $index => $service)
+                            <div class="row g-2 align-items-end mb-3">
+                                <input type="hidden" name="services[{{ $index }}][id]" value="{{ $service['id'] ?? '' }}">
+
+                                <div class="col-md-5">
+                                    <label class="form-label">Название услуги</label>
+                                    <input
+                                        type="text"
+                                        name="services[{{ $index }}][name]"
+                                        value="{{ $service['name'] ?? '' }}"
+                                        class="form-control @error('services.' . $index . '.name') is-invalid @enderror"
+                                        placeholder="Например: Мужская стрижка"
+                                    >
+                                    @error('services.' . $index . '.name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Цена</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        name="services[{{ $index }}][price]"
+                                        value="{{ $service['price'] ?? '' }}"
+                                        class="form-control @error('services.' . $index . '.price') is-invalid @enderror"
+                                        placeholder="0.00"
+                                    >
+                                    @error('services.' . $index . '.price')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Длительность</label>
+                                    <input
+                                        type="text"
+                                        name="services[{{ $index }}][duration]"
+                                        value="{{ $service['duration'] ?? '' }}"
+                                        class="form-control @error('services.' . $index . '.duration') is-invalid @enderror"
+                                        placeholder="Например: 60 минут"
+                                    >
+                                    @error('services.' . $index . '.duration')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @php
                         $days = [
                             'Monday' => 'Понедельник',
                             'Tuesday' => 'Вторник',

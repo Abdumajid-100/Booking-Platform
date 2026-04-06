@@ -51,6 +51,67 @@
                         @enderror
                     </div>
 
+                    @php
+                        $oldServices = old('services', array_fill(0, 3, ['name' => '', 'price' => '', 'duration' => '']));
+                    @endphp
+
+                    <div class="card border-0 shadow-sm rounded-4 mt-4">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0 fw-bold">Услуги бизнеса</h5>
+                                <small class="text-muted">Добавьте хотя бы одну услугу</small>
+                            </div>
+
+                            @foreach($oldServices as $index => $service)
+                                <div class="row g-2 align-items-end mb-3">
+                                    <div class="col-md-5">
+                                        <label class="form-label">Название услуги</label>
+                                        <input
+                                            type="text"
+                                            name="services[{{ $index }}][name]"
+                                            value="{{ $service['name'] ?? '' }}"
+                                            class="form-control @error('services.' . $index . '.name') is-invalid @enderror"
+                                            placeholder="Например: Мужская стрижка"
+                                        >
+                                        @error('services.' . $index . '.name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label">Цена</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            name="services[{{ $index }}][price]"
+                                            value="{{ $service['price'] ?? '' }}"
+                                            class="form-control @error('services.' . $index . '.price') is-invalid @enderror"
+                                            placeholder="0.00"
+                                        >
+                                        @error('services.' . $index . '.price')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Длительность</label>
+                                        <input
+                                            type="text"
+                                            name="services[{{ $index }}][duration]"
+                                            value="{{ $service['duration'] ?? '' }}"
+                                            class="form-control @error('services.' . $index . '.duration') is-invalid @enderror"
+                                            placeholder="Например: 60 минут"
+                                        >
+                                        @error('services.' . $index . '.duration')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     <h5 class="mt-4 mb-3 fw-bold">График работы</h5>
 
                     @php
