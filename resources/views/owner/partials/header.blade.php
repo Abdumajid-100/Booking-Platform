@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8" />
     @php
         $ownerTitle = match (true) {
-            request()->routeIs('owner.dashboard') => 'Панель владельца',
-            request()->routeIs('owner.businesses.index') => 'Мои бизнесы',
-            request()->routeIs('owner.businesses.create') => 'Добавить бизнес',
-            request()->routeIs('owner.businesses.edit') => 'Редактировать бизнес',
-            request()->routeIs('owner.businesses.show') => 'Карточка бизнеса',
+            request()->routeIs('owner.dashboard') => 'РџР°РЅРµР»СЊ РІР»Р°РґРµР»СЊС†Р°',
+            request()->routeIs('owner.businesses.index') => 'РњРѕРё Р±РёР·РЅРµСЃС‹',
+            request()->routeIs('owner.businesses.create') => 'Р”РѕР±Р°РІРёС‚СЊ Р±РёР·РЅРµСЃ',
+            request()->routeIs('owner.businesses.edit') => 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ Р±РёР·РЅРµСЃ',
+            request()->routeIs('owner.businesses.show') => 'РљР°СЂС‚РѕС‡РєР° Р±РёР·РЅРµСЃР°',
             default => 'Owner Panel',
         };
         $pageTitle = trim($__env->yieldContent('title', $ownerTitle));
@@ -49,26 +49,18 @@
                         </a>
                         <div class="dropdown-menu dropdown-menu-end profile-dropdown">
                             <div class="dropdown-header noti-title">
-                                <h6 class="text-overflow m-0">Владелец бизнеса</h6>
+                                <h6 class="text-overflow m-0">Настройка профила</h6>
                             </div>
-                            <a href="{{ route('owner.dashboard') }}" class="dropdown-item notify-item">
-                                <i class="mdi mdi-view-dashboard-outline fs-16 align-middle"></i>
-                                <span>Панель</span>
-                            </a>
                             <a href="{{ route('profile.edit') }}" class="dropdown-item notify-item">
                                 <i class="mdi mdi-account-cog-outline fs-16 align-middle"></i>
-                                <span>Настройки аккаунта</span>
-                            </a>
-                            <a href="{{ route('dashboard') }}" class="dropdown-item notify-item">
-                                <i class="mdi mdi-account fs-16 align-middle"></i>
-                                <span>Личный кабинет</span>
+                                <span>Настройка аккаунта</span>
                             </a>
                             <div class="dropdown-divider"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="dropdown-item notify-item">
                                     <i class="mdi mdi-location-exit fs-16 align-middle"></i>
-                                    <span>Выйти</span>
+                                    <span>Logout</span>
                                 </button>
                             </form>
                         </div>

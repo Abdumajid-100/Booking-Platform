@@ -10,10 +10,15 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "google-gemini-php/client": "^2.7",
+        "google-gemini-php/laravel": "^2.0",
+        "guzzlehttp/guzzle": "^7.10",
         "laravel/framework": "^13.0",
         "laravel/socialite": "^5.26",
         "laravel/tinker": "^3.0",
-        "spatie/laravel-permission": "^7.2",
+        "openai-php/client": "^0.19.1",
+        "openai-php/laravel": "^0.19.1",
+        "spatie/laravel-permission": "^7.3",
         "stripe/stripe-php": "^20.0"
     },
     "require-dev": {

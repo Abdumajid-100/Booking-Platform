@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('service_id')->constrained('services');
             $table->date('booking_date');
             $table->time('start_time');
+            $table->text('comment')->nullable();
             $table->time('end_time');
             $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('cancelled');
             $table->timestamps();

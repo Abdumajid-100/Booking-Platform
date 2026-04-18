@@ -1,86 +1,87 @@
 <?php
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
-use App\Http\Controllers\Owner\BusinessesController as OwnerBusinessesController;
-use App\Http\Controllers\ProfileController;
-use App\Models\Booking;
-use App\Models\Businesses;
-use App\Models\Payments;
-use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Admin\BusinessesController;
 use App\Http\Controllers\admin\BusinessesTypesController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\AIController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DashboardRedirectController;
+use App\Http\Controllers\Owner\BusinessesController as OwnerBusinessesController;
+use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
+use App\Http\Controllers\ProfileController;
+use App\Models\Business;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+//Wallet
+Route::get('/wallet', function () {
+    return view('public.wallet');
+})->middleware('auth')->name('wallet');
+use App\Http\Controllers\WalletController;
+use App\Http\Controllers\CardController;
 
+Route::middleware('auth')->group(function () {
+    Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->name('wallet.deposit');
+    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw'])->name('wallet.withdraw');
+    Route::post('/cards', [CardController::class, 'store'])->name('cards.store');
+});
+
+// Маршрут для отображения интерфейса чата
+Route::get('/ai-chat', function () {
+    return view('chat');
+})->name('chat.index')->middleware('auth'); // Рекомендую защитить middleware auth
+// Маршрут для обработки AJAX запросов
+Route::post('/chat/message', function (Request $request) {
+    $request->validate(['message' => 'required|string']);
+
+    // --- ЗДЕСЬ БУДЕТ ЛОГИКА ПОДКЛЮЧЕНИЯ GEMINI (из предыдущих шагов) ---
+    // Пока возвращаем заглушку для теста интерфейса:
+
+    // sleep(1); // Эмуляция задержки ответа ИИ
+})->name('chat.message')->middleware('auth');
+Route::post('/api/chat', [AIController::class, 'chat']);
 Route::get('/', function () {
-    $topBusinesses = Businesses::with('type')
+    $topBusinesses = Business::with('type')
         ->withCount('bookings')
         ->orderByDesc('bookings_count')
         ->orderByDesc('id')
         ->take(3)
         ->get();
-
     return view('public.layouts.app', compact('topBusinesses'));
 })->name('home');
 
 Route::post('/contact', [ContactController::class, 'send'])->name('contact.send');
 
 Route::get('/businesses', function () {
-    $businesses = Businesses::with(['type', 'services', 'schedules'])
-        ->latest()
-        ->get();
-
+    $businesses = Business::with(['type', 'services', 'schedules'])->latest()->get();
     return view('public.business', compact('businesses'));
 })->name('business.page');
 
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.page');
+
 Route::middleware('auth')->group(function () {
     Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
     Route::get('/booking/{booking}/payment', [BookingController::class, 'payment'])->name('booking.payment');
 });
 
-Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () {
-    Route::get('/', OwnerDashboardController::class)->name('dashboard');
-    Route::resource('businesses', OwnerBusinessesController::class);
-});
-
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('businesses', BusinessesController::class);
     Route::resource('businesses-types', BusinessesTypesController::class);
-
-})->middleware(['auth', 'role:admin']);
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-
-    $recentBookings = Booking::with(['business.type', 'service', 'payment'])
-        ->where('user_id', $user->id)
-        ->latest()
-        ->take(6)
-        ->get();
-
-    $recentPayments = Payments::with(['booking.business', 'booking.service'])
-        ->where('user_id', $user->id)
-        ->latest()
-        ->take(6)
-        ->get();
-
-    $popularBusinesses = Businesses::with('type')
-        ->withCount('bookings')
-        ->orderByDesc('bookings_count')
-        ->orderByDesc('id')
-        ->take(5)
-        ->get();
-
-    $stats = [
-        'bookings' => Booking::where('user_id', $user->id)->count(),
-        'payments' => Payments::where('user_id', $user->id)->count(),
-        'paid_total' => (float) Payments::where('user_id', $user->id)->where('status', 'paid')->sum('amount'),
-        'pending_bookings' => Booking::where('user_id', $user->id)->where('status', 'pending')->count(),
-    ];
-
-    return view('dashboard', compact('user', 'recentBookings', 'recentPayments', 'popularBusinesses', 'stats'));
-})->middleware(['auth', 'verified'])->name('dashboard');
+});
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', DashboardRedirectController::class)->name('dashboard');
+    Route::get('/client/dashboard', ClientDashboardController::class)
+        ->middleware('role:user')
+        ->name('client.dashboard');
+    Route::prefix('owner')->name('owner.')->middleware('role:owner|business')->group(function () {
+        Route::get('/dashboard', OwnerDashboardController::class)->name('dashboard');
+        Route::resource('businesses', OwnerBusinessesController::class);
+    });
+
+    Route::redirect('/business/dashboard', '/owner/dashboard')->name('business.dashboard');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -116,4 +117,5 @@ Route::middleware('auth')->group(function () {
         return 'Manage bookings page';
     })->name('bookings.manage');
 });
- require __DIR__.'/auth.php';
+
+require __DIR__.'/auth.php';

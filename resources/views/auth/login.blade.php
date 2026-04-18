@@ -165,6 +165,67 @@
             border-color: #0d6efd;
         }
 
+        .account-option {
+            display: block;
+            border: 1px solid #d7e3f3;
+            border-radius: 20px;
+            padding: 18px;
+            height: 100%;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .account-option:hover {
+            border-color: #0d6efd;
+            transform: translateY(-1px);
+        }
+
+        .account-option input {
+            margin-right: 10px;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #7a8ca5;
+            font-size: 0.95rem;
+            margin: 24px 0 18px;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #d7e3f3;
+        }
+
+        .social-auth-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .btn-social {
+            min-height: 52px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 1px solid #d7e3f3;
+            background: #fff;
+            color: #10233a;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .btn-social:hover {
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+
         .btn-auth {
             min-height: 54px;
             border-radius: 16px;
@@ -270,6 +331,7 @@
                                         <input class="form-control" type="email" name="email" id="email" value="{{ old('email') }}" required autocomplete="username" autofocus placeholder="you@example.com">
                                     </div>
 
+
                                     <div class="mb-3">
                                         <label for="password" class="form-label">Пароль</label>
                                         <input class="form-control" name="password" type="password" required id="password" autocomplete="current-password" placeholder="Введите пароль">
@@ -290,6 +352,18 @@
                                         <button class="btn btn-primary btn-auth" type="submit">Войти в кабинет</button>
                                     </div>
                                 </form>
+
+                                <div class="auth-divider">или войдите через</div>
+                                <div class="social-auth-grid mb-4">
+                                    <a class="btn-social" href="{{ route('social.redirect', ['provider' => 'google']) }}">
+                                        <i class="bi bi-google"></i>
+                                        <span>Google</span>
+                                    </a>
+                                    <a class="btn-social" href="{{ route('social.redirect', ['provider' => 'github']) }}">
+                                        <i class="bi bi-github"></i>
+                                        <span>GitHub</span>
+                                    </a>
+                                </div>
 
                                 <p class="form-hint mb-0">
                                     Ещё нет аккаунта?

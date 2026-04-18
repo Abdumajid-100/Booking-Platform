@@ -11,6 +11,7 @@ class BusinessesTypesSeeder extends Seeder
     {
         $types = [
             'Салон красоты',
+            'Спорт',
             'Барбершоп',
             'Массажный салон',
             'Стоматология',

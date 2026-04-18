@@ -12,6 +12,6 @@ class BusinessesTypes extends Model
 
     public function businesses()
     {
-        return $this->hasMany(Businesses::class, 'businesses_type_id');
+        return $this->hasMany(Business::class, 'businesses_type_id');
     }
 }

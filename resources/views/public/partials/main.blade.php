@@ -96,7 +96,7 @@
         </div>
 
     </section>
-    <!-- Services Section -->
+    <!-- Service Section -->
     <section id="services" class="services section">
 
         <!-- Section Title -->
@@ -167,7 +167,7 @@
 
         </div>
 
-    </section><!-- /Services Section -->
+    </section><!-- /Service Section -->
 
 <!-- Faq Section -->
 <section id="faq" class="faq section">

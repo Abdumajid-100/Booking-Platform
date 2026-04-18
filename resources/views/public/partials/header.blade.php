@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
     <meta charset="utf-8">
@@ -10,8 +10,11 @@
             request()->routeIs('business.page') => 'Каталог бизнесов',
             request()->routeIs('booking.page') => 'Бронирование',
             request()->routeIs('booking.payment') => 'Оплата бронирования',
+            request()->routeIs('assistant') => 'ИИ-помощник',
             default => 'BroNix',
         };
+
+        $bodyClass = request()->routeIs('assistant') ? 'assistant-body' : 'index-page';
     @endphp
     <title>{{ $publicTitle }} | BroNix</title>
     <meta name="description" content="">
@@ -29,7 +32,7 @@
     <link href="{{ asset('assets/public/css/main.css') }}" rel="stylesheet">
 </head>
 
-<body class="index-page">
+<body class="{{ $bodyClass }}">
 
 <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
@@ -39,9 +42,10 @@
 
         <nav id="navmenu" class="navmenu">
             <ul>
-                <li><a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Главная страница<br></a></li>
-                <li><a href="{{ route('business.page') }}" class="{{ request()->routeIs('business.page') ? 'active' : '' }}">Страница бизнеса</a></li>
-                <li><a href="{{ route('booking.page') }}" class="{{ request()->routeIs('booking.page', 'booking.payment') ? 'active' : '' }}">Страница бронирования</a></li>
+                <li><a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Главная</a></li>
+                <li><a href="{{ route('business.page') }}" class="{{ request()->routeIs('business.page') ? 'active' : '' }}">Бизнесы</a></li>
+                <li><a href="{{ route('booking.page') }}" class="{{ request()->routeIs('booking.page', 'booking.payment') ? 'active' : '' }}">Бронирование</a></li>
+                <li><a href="{{ route('chat.index') }}" class="{{ request()->routeIs('assistant') ? 'active' : '' }}">ИИ-помощник</a></li>
             </ul>
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
