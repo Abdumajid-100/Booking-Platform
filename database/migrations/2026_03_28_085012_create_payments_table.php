@@ -18,7 +18,7 @@ return new class extends Migration
             $table->float('amount');
             $table->enum('payment_method', ['cash', 'card','online']);
             $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
-            $table->datetime('paid_at');
+            $table->datetime('paid_at')->nullable();
             $table->timestamps();
         });
     }

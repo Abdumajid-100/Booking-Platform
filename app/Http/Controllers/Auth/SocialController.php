@@ -1,52 +1,75 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
+
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Support\Str;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Spatie\Permission\Models\Role;
+
 class SocialController extends Controller
 {
-    public function redirectToProvider($provider)
+    private const ALLOWED_PROVIDERS = ['google', 'github'];
+
+    public function redirectToProvider(string $provider): RedirectResponse
     {
+        abort_unless(in_array($provider, self::ALLOWED_PROVIDERS, true), 404);
+
         return Socialite::driver($provider)->redirect();
     }
-    public function handleProviderCallback($provider)
+
+    public function handleProviderCallback(string $provider): RedirectResponse
     {
+        abort_unless(in_array($provider, self::ALLOWED_PROVIDERS, true), 404);
+
         try {
             $socialUser = Socialite::driver($provider)->user();
-        } catch (\Exception $e) {
-// обработка ошибок (например, редирект на страницу входа с ошибкой)
-return redirect('/login')->with('error', 'Ошибка
-входа через ' . $provider);
-}
-// ищем пользователя по provider_id или email
-        $user = User::where('provider', $provider) ->where('provider_id', $socialUser->getId()) ->first();
-        if (!$user) {
-// можно попробовать найти по email и привязать
-            $user = User::where('email', $socialUser->getEmail())->first();
+        } catch (\Throwable) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Не удалось войти через '.Str::headline($provider).'.');
         }
-        if (!$user) {
-// создаём нового пользователя
+
+        $providerId = (string) $socialUser->getId();
+        $email = $socialUser->getEmail() ?: sprintf('%s_%s@oauth.local', $provider, $providerId);
+
+        $user = User::query()
+            ->where('provider', $provider)
+            ->where('provider_id', $providerId)
+            ->first();
+
+        if (! $user) {
+            $user = User::query()->where('email', $email)->first();
+        }
+
+        if (! $user) {
             $user = User::create([
-                'name' => $socialUser->getName() ?? $socialUser ->getNickname() ?? 'User',
-                'email' => $socialUser->getEmail(),
-                'password' => bcrypt(Str::random(16)), // пароль не обязателен
+                'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? ucfirst($provider).' User',
+                'email' => $email,
+                'password' => bcrypt(Str::random(32)),
                 'provider' => $provider,
-                'provider_id' => $socialUser->getId(),
-                // при необходимости сохраняйте токены:
-                //'access_token' => $socialUser->token,
-]);
-} else {
-// если пользователь найден по email, привяжем провайдера
-if (!$user->provider || !$user->provider_id) {
-    $user->update([
-        'provider' => $provider,
-        'provider_id' => $socialUser->getId(),
-    ]);
-}
-}
-        Auth::login($user, true); // логин пользователя
-        return redirect()->intended('/home');
+                'provider_id' => $providerId,
+            ]);
+        } else {
+            $user->update([
+                'name' => $user->name ?: ($socialUser->getName() ?? $socialUser->getNickname() ?? ucfirst($provider).' User'),
+                'email' => $user->email ?: $email,
+                'provider' => $provider,
+                'provider_id' => $providerId,
+            ]);
+        }
+
+        if (! $user->hasAnyRole(['admin', 'owner', 'user'])) {
+            Role::findOrCreate('user');
+            $user->assignRole('user');
+        }
+
+        Auth::login($user, true);
+        $user->normalizePanelRole();
+
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 }

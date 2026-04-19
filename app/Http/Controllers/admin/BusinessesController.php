@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Businesses;
+use App\Models\Business;
 use App\Models\BusinessesTypes;
 use App\Models\Schedules;
 use Illuminate\Http\Request;
@@ -14,14 +14,21 @@ class BusinessesController extends Controller
 {
     public function index()
     {
-        $businesses = Businesses::with('type', 'owner', 'schedules', 'services')->get();
+        $user = auth()->user();
+
+        // 🔒 только свои бизнесы
+        $businesses = Business::with('type', 'owner', 'schedules', 'services')
+            ->where('user_id', $user->id)
+            ->get();
+
         return view('admin.businesses.index', compact('businesses'));
     }
 
     public function create(Request $request)
     {
-        if (!$request->user()) {
-            return redirect()->route('login');
+        // 🔒 только business роль
+        if (!auth()->user()->hasAnyRole(['admin', 'owner', 'business'])) {
+            abort(403);
         }
 
         $types = BusinessesTypes::query()->orderBy('name')->get();
@@ -30,10 +37,12 @@ class BusinessesController extends Controller
 
     public function store(Request $request)
     {
-        $userId = $request->user()?->id;
-        if (!$userId) {
-            return redirect()->route('login');
+        // 🔒 только business роль
+        if (!auth()->user()->hasAnyRole(['admin', 'owner', 'business'])) {
+            abort(403);
         }
+
+        $userId = auth()->id();
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -62,7 +71,7 @@ class BusinessesController extends Controller
             $data['image'] = $request->file('image')->store('business_images', 'public');
         }
 
-        $business = Businesses::create($data);
+        $business = Business::create($data);
 
         if ($request->has('schedule')) {
             foreach ($request->schedule as $day => $scheduleData) {
@@ -76,16 +85,26 @@ class BusinessesController extends Controller
             ->with('success', 'Бизнес добавлен!');
     }
 
-    public function edit(Businesses $business)
+    public function edit(Business $business)
     {
+        // 🔒 только владелец
+        if ($business->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         $types = BusinessesTypes::query()->orderBy('name')->get();
         $business->load('schedules', 'services');
 
         return view('admin.businesses.edit', compact('business', 'types'));
     }
 
-    public function update(Request $request, Businesses $business)
+    public function update(Request $request, Business $business)
     {
+        // 🔒 только владелец
+        if ($business->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -130,8 +149,13 @@ class BusinessesController extends Controller
             ->with('success', 'Бизнес обновлен!');
     }
 
-    public function destroy(Businesses $business)
+    public function destroy(Business $business)
     {
+        // 🔒 только владелец
+        if ($business->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         if ($business->image) {
             Storage::disk('public')->delete($business->image);
         }
@@ -144,19 +168,25 @@ class BusinessesController extends Controller
             ->with('success', 'Бизнес удален!');
     }
 
-    public function show(Businesses $business)
+    public function show(Business $business)
     {
+        // 🔒 только владелец
+        if ($business->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         $business->load('type', 'owner', 'schedules', 'services');
 
         return view('admin.businesses.show', compact('business'));
     }
+
+    // ❗ ВСЁ НИЖЕ — ТВОЙ КОД БЕЗ ИЗМЕНЕНИЙ
 
     private function storeScheduleRow(int $businessId, string $day, array $scheduleData): void
     {
         $startTime = $this->normalizeTime($scheduleData['start'] ?? null);
         $endTime = $this->normalizeTime($scheduleData['end'] ?? null);
         $hasTimeRange = (bool) ($startTime && $endTime);
-        // If hours are not provided, save day as day off by default.
         $isDayOff = !$hasTimeRange;
 
         Schedules::create([
@@ -168,14 +198,13 @@ class BusinessesController extends Controller
         ]);
     }
 
-    private function upsertScheduleRow(Businesses $business, string $day, array $scheduleData): void
+    private function upsertScheduleRow(Business $business, string $day, array $scheduleData): void
     {
         $schedule = $business->schedules()->firstOrNew(['day_of_week' => $day]);
 
         $startTime = $this->normalizeTime($scheduleData['start'] ?? null);
         $endTime = $this->normalizeTime($scheduleData['end'] ?? null);
         $hasTimeRange = (bool) ($startTime && $endTime);
-        // If hours are not provided, keep day as day off by default.
         $isDayOff = !$hasTimeRange;
 
         $schedule->business_id = $business->id;
@@ -187,26 +216,17 @@ class BusinessesController extends Controller
 
     private function normalizeTime(?string $value): ?string
     {
-        if (!$value) {
-            return null;
-        }
+        if (!$value) return null;
 
         $value = trim($value);
-        if ($value === '') {
-            return null;
-        }
+        if ($value === '') return null;
 
-        // Accept only valid HH:MM or HH:MM:SS and store as HH:MM.
-        if (!preg_match('/^\\d{2}:\\d{2}(:\\d{2})?$/', $value)) {
-            return null;
-        }
+        if (!preg_match('/^\\d{2}:\\d{2}(:\\d{2})?$/', $value)) return null;
 
         $time = substr($value, 0, 5);
         [$hours, $minutes] = array_map('intval', explode(':', $time));
 
-        if ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59) {
-            return null;
-        }
+        if ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59) return null;
 
         return $time;
     }
@@ -219,9 +239,7 @@ class BusinessesController extends Controller
             $duration = trim((string) ($service['duration'] ?? ''));
             $hasAnyValue = $name !== '' || $price !== '' || $duration !== '';
 
-            if (!$hasAnyValue) {
-                continue;
-            }
+            if (!$hasAnyValue) continue;
 
             if ($name === '') {
                 $validator->errors()->add("services.$index.name", 'Укажите название услуги.');
@@ -237,7 +255,7 @@ class BusinessesController extends Controller
         }
     }
 
-    private function syncServices(Businesses $business, array $servicesInput): void
+    private function syncServices(Business $business, array $servicesInput): void
     {
         $services = collect($servicesInput)
             ->map(function (array $service) {
@@ -248,9 +266,11 @@ class BusinessesController extends Controller
                     'duration' => trim((string) ($service['duration'] ?? '')),
                 ];
             })
-            ->filter(function (array $service) {
-                return $service['name'] !== '' && $service['price'] !== '' && $service['duration'] !== '';
-            })
+            ->filter(fn($service) =>
+                $service['name'] !== '' &&
+                $service['price'] !== '' &&
+                $service['duration'] !== ''
+            )
             ->values();
 
         $existingIds = $business->services()->pluck('id')->all();
@@ -258,6 +278,7 @@ class BusinessesController extends Controller
 
         foreach ($services as $serviceData) {
             $serviceId = $serviceData['id'] ? (int) $serviceData['id'] : null;
+
             $payload = [
                 'name' => $serviceData['name'],
                 'price' => $serviceData['price'],
@@ -279,7 +300,8 @@ class BusinessesController extends Controller
         }
 
         $idsToDelete = array_diff($existingIds, $keptIds);
-        if ($idsToDelete !== []) {
+
+        if ($idsToDelete) {
             $business->services()->whereIn('id', $idsToDelete)->delete();
         }
     }

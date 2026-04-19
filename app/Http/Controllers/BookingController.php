@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use App\Models\Businesses;
+use App\Models\Business;
 use App\Models\Payments;
-use App\Models\Services;
+use App\Models\Service;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,7 @@ class BookingController extends Controller
 {
     public function create(): View
     {
-        $businesses = Businesses::with(['type', 'services', 'schedules'])
+        $businesses = Business::with(['type', 'services', 'schedules'])
             ->latest()
             ->get();
 
@@ -32,8 +32,8 @@ class BookingController extends Controller
             'comment' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $business = Businesses::findOrFail($validated['business_id']);
-        $service = Services::where('id', $validated['service_id'])
+        $business = Business::findOrFail($validated['business_id']);
+        $service = Service::where('id', $validated['service_id'])
             ->where('business_id', $business->id)
             ->firstOrFail();
 

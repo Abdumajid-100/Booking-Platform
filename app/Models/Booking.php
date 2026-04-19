@@ -24,12 +24,12 @@ class Booking extends Model
 
     public function business()
     {
-        return $this->belongsTo(Businesses::class, 'business_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function service()
     {
-        return $this->belongsTo(Services::class, 'service_id');
+        return $this->belongsTo(Service::class, 'service_id');
     }
 
     public function payment()

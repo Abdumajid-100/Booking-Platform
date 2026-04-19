@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
-use App\Models\Businesses;
+use App\Models\Business;
 use App\Models\BusinessesTypes;
 use App\Models\Schedules;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +16,7 @@ class BusinessesController extends Controller
 {
     public function index(Request $request): View
     {
-        $businesses = Businesses::with(['type', 'schedules', 'services'])
+        $businesses = Business::with(['type', 'schedules', 'services'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->get();
@@ -59,7 +59,7 @@ class BusinessesController extends Controller
             $data['image'] = $request->file('image')->store('business_images', 'public');
         }
 
-        $business = Businesses::create($data);
+        $business = Business::create($data);
 
         if ($request->user() && !$request->user()->hasRole('owner')) {
             $request->user()->assignRole('owner');
@@ -74,7 +74,7 @@ class BusinessesController extends Controller
         return redirect()->route('owner.businesses.index')->with('success', 'Бизнес успешно добавлен.');
     }
 
-    public function show(Request $request, Businesses $business): View
+    public function show(Request $request, Business $business): View
     {
         $business = $this->ownedBusiness($request, $business);
         $business->load(['type', 'schedules', 'services']);
@@ -82,7 +82,7 @@ class BusinessesController extends Controller
         return view('owner.businesses.show', compact('business'));
     }
 
-    public function edit(Request $request, Businesses $business): View
+    public function edit(Request $request, Business $business): View
     {
         $business = $this->ownedBusiness($request, $business);
         $business->load(['schedules', 'services']);
@@ -91,7 +91,7 @@ class BusinessesController extends Controller
         return view('owner.businesses.edit', compact('business', 'types'));
     }
 
-    public function update(Request $request, Businesses $business): RedirectResponse
+    public function update(Request $request, Business $business): RedirectResponse
     {
         $business = $this->ownedBusiness($request, $business);
 
@@ -136,7 +136,7 @@ class BusinessesController extends Controller
         return redirect()->route('owner.businesses.index')->with('success', 'Бизнес успешно обновлен.');
     }
 
-    public function destroy(Request $request, Businesses $business): RedirectResponse
+    public function destroy(Request $request, Business $business): RedirectResponse
     {
         $business = $this->ownedBusiness($request, $business);
 
@@ -151,7 +151,7 @@ class BusinessesController extends Controller
         return redirect()->route('owner.businesses.index')->with('success', 'Бизнес успешно удален.');
     }
 
-    private function ownedBusiness(Request $request, Businesses $business): Businesses
+    private function ownedBusiness(Request $request, Business $business): Business
     {
         abort_unless($business->user_id === $request->user()->id, 403);
 
@@ -174,7 +174,7 @@ class BusinessesController extends Controller
         ]);
     }
 
-    private function upsertScheduleRow(Businesses $business, string $day, array $scheduleData): void
+    private function upsertScheduleRow(Business $business, string $day, array $scheduleData): void
     {
         $schedule = $business->schedules()->firstOrNew(['day_of_week' => $day]);
         $startTime = $this->normalizeTime($scheduleData['start'] ?? null);
@@ -236,7 +236,7 @@ class BusinessesController extends Controller
         }
     }
 
-    private function syncServices(Businesses $business, array $servicesInput): void
+    private function syncServices(Business $business, array $servicesInput): void
     {
         $services = collect($servicesInput)
             ->map(function (array $service) {

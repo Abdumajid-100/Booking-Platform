@@ -119,6 +119,67 @@
             box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.12);
         }
 
+        .account-option {
+            display: block;
+            border: 1px solid #d7e3f3;
+            border-radius: 20px;
+            padding: 18px;
+            height: 100%;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .account-option:hover {
+            border-color: #198754;
+            transform: translateY(-1px);
+        }
+
+        .account-option input {
+            margin-right: 10px;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #7a8ca5;
+            font-size: 0.95rem;
+            margin: 24px 0 18px;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #d7e3f3;
+        }
+
+        .social-auth-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .btn-social {
+            min-height: 52px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 1px solid #d7e3f3;
+            background: #fff;
+            color: #10233a;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .btn-social:hover {
+            border-color: #198754;
+            color: #198754;
+        }
+
         .btn-auth {
             min-height: 54px;
             border-radius: 16px;
@@ -224,6 +285,33 @@
                                     </div>
 
                                     <div class="mb-3">
+                                        <label class="form-label d-block">Тип аккаунта</label>
+                                        <div class="row g-3">
+
+                                            <!-- Пользователь -->
+                                            <div class="col-md-6">
+                                                <label class="account-option {{ old('account_type', 'user') === 'user' ? 'border-success bg-success bg-opacity-10' : '' }}">
+                                                    <input class="form-check-input" type="radio" name="account_type" value="user"
+                                                        {{ old('account_type', 'user') === 'user' ? 'checked' : '' }}>
+                                                    <span class="fw-semibold d-block mt-2 mb-1">Пользователь</span>
+                                                    <small class="text-muted">Личный кабинет, бронирования и оплаты.</small>
+                                                </label>
+                                            </div>
+
+                                            <!-- Владелец бизнеса -->
+                                            <div class="col-md-6">
+                                                <label class="account-option {{ old('account_type') === 'owner' ? 'border-success bg-success bg-opacity-10' : '' }}">
+                                                    <input class="form-check-input" type="radio" name="account_type" value="owner"
+                                                        {{ old('account_type') === 'owner' ? 'checked' : '' }}>
+                                                    <span class="fw-semibold d-block mt-2 mb-1">Владелец бизнеса</span>
+                                                    <small class="text-muted">Управление бизнесом и услугами.</small>
+                                                </label>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
                                         <label for="password" class="form-label">Пароль</label>
                                         <input class="form-control" id="password" type="password" name="password" required autocomplete="new-password" placeholder="Придумайте пароль">
                                     </div>
@@ -237,6 +325,18 @@
                                         <button class="btn btn-success btn-auth" type="submit">Создать аккаунт</button>
                                     </div>
                                 </form>
+
+                                <div class="auth-divider">или продолжите через</div>
+                                <div class="social-auth-grid mb-4">
+                                    <a class="btn-social" href="{{ route('social.redirect', ['provider' => 'google']) }}">
+                                        <i class="bi bi-google"></i>
+                                        <span>Google</span>
+                                    </a>
+                                    <a class="btn-social" href="{{ route('social.redirect', ['provider' => 'github']) }}">
+                                        <i class="bi bi-github"></i>
+                                        <span>GitHub</span>
+                                    </a>
+                                </div>
 
                                 <p class="mb-0 text-muted">
                                     Уже зарегистрированы?

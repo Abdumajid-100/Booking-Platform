@@ -17,6 +17,6 @@ class Schedules extends Model
 
     public function business()
     {
-        return $this->belongsTo(Businesses::class, 'business_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 }

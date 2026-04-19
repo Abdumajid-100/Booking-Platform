@@ -21,45 +21,74 @@
             </div>
 
             <ul id="side-menu">
-                <li class="menu-title">Owner Menu</li>
+                <li class="menu-title">Меню владельца</li>
 
                 <li>
                     <a href="{{ route('owner.dashboard') }}" class="{{ request()->routeIs('owner.dashboard') ? 'active' : '' }}">
                         <i data-feather="home"></i>
-                        <span> Dashboard </span>
+                        <span> Панель управления </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{route('wallet')}}" class="{{ request()->routeIs('wallet') ? 'active' : '' }}">
+                        <i data-feather="home"></i>
+                        <span>Кошелёк  </span>
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('owner.businesses.index') }}" class="{{ request()->routeIs('owner.businesses.*') ? 'active' : '' }}">
+                    <a href="{{ route('owner.businesses.index') }}" class="{{ request()->routeIs('owner.businesses.index', 'owner.businesses.show', 'owner.businesses.edit') ? 'active' : '' }}">
                         <i data-feather="briefcase"></i>
-                        <span> My Businesses </span>
+                        <span> Мои бизнесы </span>
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('owner.businesses.create') }}">
+                    <a href="{{ route('owner.businesses.create') }}" class="{{ request()->routeIs('owner.businesses.create') ? 'active' : '' }}">
                         <i data-feather="plus-circle"></i>
-                        <span> Add Business </span>
+                        <span> Создать бизнес </span>
                     </a>
                 </li>
 
-                <li class="menu-title mt-2">Workspace</li>
+                <li>
+                    <a href="{{ route('owner.dashboard') }}" class="{{ request()->routeIs('owner.dashboard') ? 'active' : '' }}">
+                        <i data-feather="credit-card"></i>
+                        <span> История платежей </span>
+                    </a>
+                </li>
 
                 <li>
-                    <a href="{{ route('dashboard') }}">
-                        <i data-feather="user"></i>
-                        <span> Client Cabinet </span>
+                    <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.edit') ? 'active' : '' }}">
+                        <i data-feather="settings"></i>
+                        <span> Настройки аккаунта </span>
                     </a>
+                </li>
+
+                <li class="menu-title mt-2">Переходы</li>
+
+                <li>
                 </li>
 
                 <li>
                     <a href="{{ route('home') }}">
                         <i data-feather="globe"></i>
-                        <span> Public Site </span>
+                        <span> Публичный сайт </span>
                     </a>
+                </li>
+
+                <li class="menu-title mt-2">Аккаунт</li>
+
+                <li>
+                    <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('owner-sidebar-logout-form').submit();">
+                        <i data-feather="log-out"></i>
+                        <span> Выйти </span>
+                    </a>
+                    <form id="owner-sidebar-logout-form" method="POST" action="{{ route('logout') }}" class="d-none">
+                        @csrf
+                    </form>
                 </li>
             </ul>
         </div>
+        <div class="clearfix"></div>
     </div>
 </div>

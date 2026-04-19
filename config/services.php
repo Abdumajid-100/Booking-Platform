@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Third Party Services
+    | Third Party Service
     |--------------------------------------------------------------------------
     |
     | This file is for storing the credentials for third party services such
@@ -13,6 +13,12 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+
+        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+    ],
     'google' => [
     'client_id' => env('GOOGLE_CLIENT_ID'),
     'client_secret' => env('GOOGLE_CLIENT_SECRET'),
